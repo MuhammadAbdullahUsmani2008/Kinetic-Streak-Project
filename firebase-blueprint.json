@@ -1,0 +1,205 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with personal timezone and visibility settings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "profileVisibility": { "type": "string", "enum": ["private", "public"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "displayName", "timezone", "profileVisibility"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Organizational container for multiple related activities",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "visibility": { "type": "string", "enum": ["private", "public"] },
+        "status": { "type": "string", "enum": ["active", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "ownerId", "title", "visibility", "status"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Habit or task tracked individually or within a project",
+      "type": "object",
+      "properties": {
+        "activityId": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "projectId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 140 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "activityType": { "type": "string", "enum": ["habit", "task"] },
+        "scheduleType": { "type": "string", "enum": ["daily", "weekdays"] },
+        "scheduleDays": { "type": "array" },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "startDate": { "type": "string", "maxLength": 10 },
+        "endDate": { "type": "string", "maxLength": 10 },
+        "visibility": { "type": "string", "enum": ["private", "public"] },
+        "status": { "type": "string", "enum": ["active", "paused", "archived", "completed"] },
+        "currentStreak": { "type": "number" },
+        "longestStreak": { "type": "number" },
+        "totalCompletedDays": { "type": "number" },
+        "lastCompletedDate": { "type": "string", "maxLength": 10 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["activityId", "ownerId", "title", "activityType", "scheduleType", "timezone", "startDate", "visibility", "status"]
+    },
+    "CheckIn": {
+      "title": "CheckIn",
+      "description": "Immutable daily check-in record for an individual activity",
+      "type": "object",
+      "properties": {
+        "checkInId": { "type": "string", "maxLength": 128 },
+        "activityId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "localDate": { "type": "string", "maxLength": 10 },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "note": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["checkInId", "activityId", "userId", "localDate", "completedAt"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "Accountability group with shared challenges and leaderboards",
+      "type": "object",
+      "properties": {
+        "groupId": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "visibility": { "type": "string", "enum": ["private", "public"] },
+        "memberCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["groupId", "ownerId", "name", "visibility"]
+    },
+    "GroupMember": {
+      "title": "GroupMember",
+      "description": "Membership link of a user to an accountability group",
+      "type": "object",
+      "properties": {
+        "membershipId": { "type": "string", "maxLength": 128 },
+        "groupId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["owner", "member"] },
+        "status": { "type": "string", "enum": ["active", "left"] },
+        "joinedAt": { "type": "string", "format": "date-time" },
+        "leftAt": { "type": "string", "format": "date-time" },
+        "eligibilityStartDate": { "type": "string", "maxLength": 10 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["membershipId", "groupId", "userId", "role", "status", "joinedAt", "eligibilityStartDate"]
+    },
+    "GroupInvitation": {
+      "title": "GroupInvitation",
+      "description": "Invitation record with secure token/code, expiration and use count",
+      "type": "object",
+      "properties": {
+        "invitationId": { "type": "string", "maxLength": 128 },
+        "groupId": { "type": "string", "maxLength": 128 },
+        "inviteCode": { "type": "string", "maxLength": 32 },
+        "tokenHash": { "type": "string", "maxLength": 128 },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "maxUses": { "type": "number" },
+        "useCount": { "type": "number" },
+        "revokedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["invitationId", "groupId", "inviteCode", "createdBy", "useCount"]
+    },
+    "GroupChallenge": {
+      "title": "GroupChallenge",
+      "description": "Shared challenge pursued independently by group members with fixed timezone",
+      "type": "object",
+      "properties": {
+        "challengeId": { "type": "string", "maxLength": 128 },
+        "groupId": { "type": "string", "maxLength": 128 },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 140 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "projectId": { "type": "string", "maxLength": 128 },
+        "startDate": { "type": "string", "maxLength": 10 },
+        "endDate": { "type": "string", "maxLength": 10 },
+        "scheduleType": { "type": "string", "enum": ["daily", "weekdays"] },
+        "scheduleDays": { "type": "array" },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["active", "completed", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["challengeId", "groupId", "createdBy", "title", "scheduleType", "timezone", "startDate", "status"]
+    },
+    "GroupChallengeCheckIn": {
+      "title": "GroupChallengeCheckIn",
+      "description": "Daily individual check-in for a group challenge",
+      "type": "object",
+      "properties": {
+        "checkInId": { "type": "string", "maxLength": 128 },
+        "challengeId": { "type": "string", "maxLength": 128 },
+        "groupId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "localDate": { "type": "string", "maxLength": 10 },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "note": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["checkInId", "challengeId", "groupId", "userId", "localDate", "completedAt"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles with visibility controls"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Projects owned by users"
+    },
+    "/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "Personal activities (habits and tasks) with scheduling"
+    },
+    "/checkIns/{checkInId}": {
+      "schema": "CheckIn",
+      "description": "Personal daily check-ins"
+    },
+    "/groups/{groupId}": {
+      "schema": "Group",
+      "description": "Accountability groups"
+    },
+    "/groupMembers/{membershipId}": {
+      "schema": "GroupMember",
+      "description": "Memberships linking users to groups"
+    },
+    "/groupInvitations/{invitationId}": {
+      "schema": "GroupInvitation",
+      "description": "Invitation tokens and codes for joining groups"
+    },
+    "/groupChallenges/{challengeId}": {
+      "schema": "GroupChallenge",
+      "description": "Shared challenges within groups"
+    },
+    "/groupChallengeCheckIns/{checkInId}": {
+      "schema": "GroupChallengeCheckIn",
+      "description": "Individual member check-ins for group challenges"
+    }
+  }
+}

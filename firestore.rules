@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User Profiles
+    match /profiles/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || resource.data.profileVisibility == 'public');
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.profileVisibility == 'public');
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && request.resource.data.userId == userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // Projects
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.visibility == 'public');
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.visibility == 'public');
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Activities
+    match /activities/{activityId} {
+      allow get: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.visibility == 'public');
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.visibility == 'public');
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Personal Check-Ins
+    match /checkIns/{checkInId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if false; // check-ins are immutable
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Groups
+    match /groups/{groupId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        // Allow members to update member count
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount', 'updatedAt'])
+      );
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Group Memberships
+    match /groupMembers/{membershipId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.ownerId == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.ownerId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.ownerId == request.auth.uid
+      );
+    }
+
+    // Group Invitations
+    match /groupInvitations/{invitationId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.ownerId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.ownerId == request.auth.uid;
+    }
+
+    // Group Challenges
+    match /groupChallenges/{challengeId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.ownerId == request.auth.uid;
+      allow delete: if isSignedIn() && get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.ownerId == request.auth.uid;
+    }
+
+    // Group Challenge Check-Ins
+    match /groupChallengeCheckIns/{checkInId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if false; // immutable
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
